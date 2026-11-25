@@ -151,6 +151,7 @@ footer img{width:44px;height:auto;margin-bottom:8px}
 .support-count{font-size:.92rem;font-weight:700;color:#e6c8ff;letter-spacing:.02em;text-align:center}
 .support-count b{color:#d24bff;font-size:1.1rem}
 .support-heart.apoyado{box-shadow:0 0 0 2px rgba(255,255,255,.6) inset,0 8px 30px rgba(179,15,234,.55),0 0 55px rgba(122,27,255,.4)}
+.support-heart:disabled{cursor:default;opacity:.94}
 .heart-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:99;max-width:min(92vw,420px);padding:16px 18px 16px 20px;border-radius:18px;background:rgba(10,14,45,.92);border:1px solid rgba(210,75,255,.55);box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 40px rgba(179,15,234,.35);color:#fff;font-size:.98rem;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;backdrop-filter:blur(10px)}
 .heart-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
 .heart-toast p{margin:0;padding-right:26px}
@@ -406,14 +407,17 @@ footer img{width:44px;height:auto;margin-bottom:8px}
    El conteo vive en Abacus (abacus.jasoncameron.dev), un servicio
    gratuito de contadores: /get lee el número sin cambiarlo y /hit
    suma 1. La página sola no puede guardar números entre visitantes.
-   Clave del contador: namespace "zenvyr", key "apoyo-corazon".
+   Clave del contador: namespace "zenvyr", key "apoyo-corazon-2".
+   (La primera clave, "apoyo-corazon", quedó en 2 por un doble toque
+   al probarla en vivo; Abacus no permite reiniciar contadores, así
+   que se cambió a una clave nueva que empieza en 0.)
    Una marca en el navegador de cada visitante (localStorage
    "zenvyr-apoyo-corazon") evita que el mismo celular cuente dos
    veces. APOYO_CORAZON_URL es el enlace que Adrián pasará después:
    cuando tenga valor, el botón además abrirá ese enlace al picarle. */
 var APOYO_CORAZON_URL = "";
 var APOYO_API = "https://abacus.jasoncameron.dev";
-var APOYO_NS = "zenvyr", APOYO_KEY = "apoyo-corazon";
+var APOYO_NS = "zenvyr", APOYO_KEY = "apoyo-corazon-2";
 var APOYO_GUARDADO = "zenvyr-apoyo-corazon";
 var PERFIL_TIKTOK = "https://www.tiktok.com/@zenvyroficial?_r=1&_t=ZS-9BhTAqmhqgG";
 (function(){
@@ -422,24 +426,26 @@ var PERFIL_TIKTOK = "https://www.tiktok.com/@zenvyroficial?_r=1&_t=ZS-9BhTAqmhqg
       countEl=document.getElementById('apoyo-count'),
       toast=document.getElementById('heart-toast'),
       msg=document.getElementById('heart-toast-msg'),
-      x=document.getElementById('heart-toast-x'),t=null;
+      x=document.getElementById('heart-toast-x'),t=null,enviando=false;
   if(!btn||!toast)return;
   function hide(){toast.classList.remove('show')}
   function aviso(html){ if(msg)msg.innerHTML=html; toast.classList.add('show'); clearTimeout(t); t=setTimeout(hide,7000); }
   function pintar(n){ if(countEl)countEl.innerHTML='♥ <b>'+n+'</b> '+(n===1?'persona que apoya':'personas que apoyan'); }
   function yaApoyo(){ try{return localStorage.getItem(APOYO_GUARDADO)==='1'}catch(e){return false} }
-  function marcarApoyado(){ try{localStorage.setItem(APOYO_GUARDADO,'1')}catch(e){} btn.classList.add('apoyado'); if(txt)txt.textContent='¡Apoyado!'; }
-  if(yaApoyo()){ btn.classList.add('apoyado'); if(txt)txt.textContent='¡Apoyado!'; }
+  function marcarApoyado(){ try{localStorage.setItem(APOYO_GUARDADO,'1')}catch(e){} btn.classList.add('apoyado'); btn.disabled=true; if(txt)txt.textContent='¡Apoyado!'; }
+  if(yaApoyo()){ btn.classList.add('apoyado'); btn.disabled=true; if(txt)txt.textContent='¡Apoyado!'; }
   fetch(APOYO_API+'/get/'+APOYO_NS+'/'+APOYO_KEY).then(function(r){return r.json()}).then(function(d){
     if(typeof d.value==='number')pintar(d.value); else pintar(0);
   }).catch(function(){ if(countEl)countEl.textContent='♥ personas que apoyan'; });
   btn.addEventListener('click',function(){
     if(APOYO_CORAZON_URL)window.open(APOYO_CORAZON_URL,'_blank','noopener');
     if(yaApoyo()){ aviso('Ya apoyaste ♥<br>¡Gracias por tu apoyo!'); return; }
+    if(enviando)return;
+    enviando=true; btn.disabled=true;
     fetch(APOYO_API+'/hit/'+APOYO_NS+'/'+APOYO_KEY).then(function(r){return r.json()}).then(function(d){
       if(typeof d.value==='number'){ pintar(d.value); marcarApoyado(); aviso('¡Gracias por apoyar a Zenvyr! ♥<br>Sígueme en TikTok 👉 <a href="'+PERFIL_TIKTOK+'" target="_blank" rel="noopener noreferrer">Ir a mi perfil</a>'); }
-      else aviso('No se pudo registrar tu apoyo, inténtalo de nuevo.');
-    }).catch(function(){ aviso('No se pudo registrar tu apoyo, revisa tu conexión e inténtalo de nuevo.'); });
+      else { enviando=false; btn.disabled=false; aviso('No se pudo registrar tu apoyo, inténtalo de nuevo.'); }
+    }).catch(function(){ enviando=false; btn.disabled=false; aviso('No se pudo registrar tu apoyo, revisa tu conexión e inténtalo de nuevo.'); });
   });
   if(x)x.addEventListener('click',function(){clearTimeout(t);hide()});
 })();
