@@ -147,6 +147,10 @@ footer img{width:44px;height:auto;margin-bottom:8px}
 .support-heart:hover,.support-heart:focus-visible{transform:translateY(-3px) scale(1.04);box-shadow:0 0 0 1px rgba(255,255,255,.55) inset,0 12px 40px rgba(210,75,255,.6),0 0 75px rgba(122,27,255,.5)}
 .support-heart:active{transform:scale(.97)}
 .support-heart svg{width:22px;height:22px;fill:#fff;animation:beat 1.6s ease-in-out infinite}
+.support-heart-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.support-count{font-size:.92rem;font-weight:700;color:#e6c8ff;letter-spacing:.02em;text-align:center}
+.support-count b{color:#d24bff;font-size:1.1rem}
+.support-heart.apoyado{box-shadow:0 0 0 2px rgba(255,255,255,.6) inset,0 8px 30px rgba(179,15,234,.55),0 0 55px rgba(122,27,255,.4)}
 .heart-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:99;max-width:min(92vw,420px);padding:16px 18px 16px 20px;border-radius:18px;background:rgba(10,14,45,.92);border:1px solid rgba(210,75,255,.55);box-shadow:0 12px 40px rgba(0,0,0,.5),0 0 40px rgba(179,15,234,.35);color:#fff;font-size:.98rem;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;backdrop-filter:blur(10px)}
 .heart-toast.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
 .heart-toast p{margin:0;padding-right:26px}
@@ -226,10 +230,13 @@ footer img{width:44px;height:auto;margin-bottom:8px}
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7.9a4.3 4.3 0 017.5 2.4c0 5.6-7.5 10.2-7.5 10.2z"/></svg>
     Apoyar el proyecto
   </a>
+  <div class="support-heart-wrap">
   <button class="support-heart" id="btn-apoyo-corazon" type="button" aria-label="Apoyar con corazón">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-    Apoyar
+    <span id="btn-apoyo-texto">Apoyar</span>
   </button>
+  <span class="support-count" id="apoyo-count">♥ … personas que apoyan</span>
+  </div>
   </div>
   <span class="badge">Versión demo en desarrollo</span>
 
@@ -392,26 +399,47 @@ footer img{width:44px;height:auto;margin-bottom:8px}
 </script>
 <div class="heart-toast" id="heart-toast" role="status">
   <button class="heart-toast-x" id="heart-toast-x" type="button" aria-label="Cerrar">×</button>
-  <p><b>Este botón todavía no funciona.</b><br>Pero puedes ir a mi perfil de TikTok 👉 <a href="https://www.tiktok.com/@zenvyroficial?_r=1&amp;_t=ZS-9BhTAqmhqgG" target="_blank" rel="noopener noreferrer">Ir a mi perfil</a></p>
+  <p id="heart-toast-msg"><b>¡Gracias por apoyar a Zenvyr! ♥</b></p>
 </div>
 <script>
-/* BOTÓN MORADO CON CORAZÓN (Apoyar):
-   APOYO_CORAZON_URL es el enlace que Adrián pasará después.
-   Mientras esté vacío, al picarle el botón muestra el aviso de
-   "todavía no funciona" con el enlace a su perfil.
-   Cuando Adrián mande el enlace, basta ponerlo aquí y el botón
-   lo abrirá directo en una pestaña nueva. */
+/* BOTÓN MORADO CON CORAZÓN — CONTADOR "PERSONAS QUE APOYAN":
+   El conteo vive en Abacus (abacus.jasoncameron.dev), un servicio
+   gratuito de contadores: /get lee el número sin cambiarlo y /hit
+   suma 1. La página sola no puede guardar números entre visitantes.
+   Clave del contador: namespace "zenvyr", key "apoyo-corazon".
+   Una marca en el navegador de cada visitante (localStorage
+   "zenvyr-apoyo-corazon") evita que el mismo celular cuente dos
+   veces. APOYO_CORAZON_URL es el enlace que Adrián pasará después:
+   cuando tenga valor, el botón además abrirá ese enlace al picarle. */
 var APOYO_CORAZON_URL = "";
+var APOYO_API = "https://abacus.jasoncameron.dev";
+var APOYO_NS = "zenvyr", APOYO_KEY = "apoyo-corazon";
+var APOYO_GUARDADO = "zenvyr-apoyo-corazon";
+var PERFIL_TIKTOK = "https://www.tiktok.com/@zenvyroficial?_r=1&_t=ZS-9BhTAqmhqgG";
 (function(){
   var btn=document.getElementById('btn-apoyo-corazon'),
+      txt=document.getElementById('btn-apoyo-texto'),
+      countEl=document.getElementById('apoyo-count'),
       toast=document.getElementById('heart-toast'),
+      msg=document.getElementById('heart-toast-msg'),
       x=document.getElementById('heart-toast-x'),t=null;
   if(!btn||!toast)return;
   function hide(){toast.classList.remove('show')}
+  function aviso(html){ if(msg)msg.innerHTML=html; toast.classList.add('show'); clearTimeout(t); t=setTimeout(hide,7000); }
+  function pintar(n){ if(countEl)countEl.innerHTML='♥ <b>'+n+'</b> '+(n===1?'persona que apoya':'personas que apoyan'); }
+  function yaApoyo(){ try{return localStorage.getItem(APOYO_GUARDADO)==='1'}catch(e){return false} }
+  function marcarApoyado(){ try{localStorage.setItem(APOYO_GUARDADO,'1')}catch(e){} btn.classList.add('apoyado'); if(txt)txt.textContent='¡Apoyado!'; }
+  if(yaApoyo()){ btn.classList.add('apoyado'); if(txt)txt.textContent='¡Apoyado!'; }
+  fetch(APOYO_API+'/get/'+APOYO_NS+'/'+APOYO_KEY).then(function(r){return r.json()}).then(function(d){
+    if(typeof d.value==='number')pintar(d.value); else pintar(0);
+  }).catch(function(){ if(countEl)countEl.textContent='♥ personas que apoyan'; });
   btn.addEventListener('click',function(){
-    if(APOYO_CORAZON_URL){window.open(APOYO_CORAZON_URL,'_blank','noopener');return}
-    toast.classList.add('show');
-    clearTimeout(t);t=setTimeout(hide,7000);
+    if(APOYO_CORAZON_URL)window.open(APOYO_CORAZON_URL,'_blank','noopener');
+    if(yaApoyo()){ aviso('Ya apoyaste ♥<br>¡Gracias por tu apoyo!'); return; }
+    fetch(APOYO_API+'/hit/'+APOYO_NS+'/'+APOYO_KEY).then(function(r){return r.json()}).then(function(d){
+      if(typeof d.value==='number'){ pintar(d.value); marcarApoyado(); aviso('¡Gracias por apoyar a Zenvyr! ♥<br>Sígueme en TikTok 👉 <a href="'+PERFIL_TIKTOK+'" target="_blank" rel="noopener noreferrer">Ir a mi perfil</a>'); }
+      else aviso('No se pudo registrar tu apoyo, inténtalo de nuevo.');
+    }).catch(function(){ aviso('No se pudo registrar tu apoyo, revisa tu conexión e inténtalo de nuevo.'); });
   });
   if(x)x.addEventListener('click',function(){clearTimeout(t);hide()});
 })();
