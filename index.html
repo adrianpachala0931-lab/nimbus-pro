@@ -134,6 +134,15 @@ ul.ck li::before{content:"";position:absolute;left:4px;top:.6em;width:9px;height
 footer{border-top:1px solid var(--line);padding:30px 0 40px;text-align:center;color:var(--mut);font-size:.88rem}
 .visitas{display:inline-block;margin-top:16px;padding:8px 18px;border-radius:99px;border:1px solid rgba(210,75,255,.45);background:rgba(122,27,255,.12);font-size:.95rem;color:#e6c8ff}
 .visitas b{color:#d24bff;font-size:1.15rem}
+
+/* meta de seguidores en TikTok */
+.goal{margin-top:16px}
+.goal-card{border-color:rgba(60,200,255,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 0 40px rgba(60,200,255,.12)}
+.goal-num{font-size:2rem;font-weight:800;line-height:1.15;margin:6px 0 10px}
+.goal-of{font-size:1.05rem;color:var(--mut);font-weight:700}
+.goal-bar{height:12px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.goal-fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#6dff4f,#3cc8ff,#a35cff);transition:width .8s ease}
+.goal-card p{margin:10px 0 0}
 footer img{width:44px;height:auto;margin-bottom:8px}
 
 
@@ -266,6 +275,16 @@ footer img{width:44px;height:auto;margin-bottom:8px}
         <div><strong data-u="m">--</strong><span>min</span></div>
         <div><strong data-u="s">--</strong><span>seg</span></div>
       </div>
+    </article>
+  </div>
+
+  <div class="goal" id="meta-seguidores">
+    <article class="card goal-card">
+      <div class="kicker">Meta de seguidores en TikTok</div>
+      <div class="goal-num"><span class="grad" id="seguidores-num">7</span><span class="goal-of"> / 1,000 seguidores</span></div>
+      <div class="goal-bar"><div class="goal-fill" id="seguidores-bar" style="width:.7%"></div></div>
+      <p class="cond" id="seguidores-faltan">Faltan 993 seguidores para que Zenvyr salga el 24 de diciembre.</p>
+      <p class="cond">Sígueme en TikTok 👉 <a href="https://www.tiktok.com/@zenvyroficial" target="_blank" rel="noopener noreferrer">@zenvyroficial</a></p>
     </article>
   </div>
 </header>
@@ -481,6 +500,35 @@ var PERFIL_TIKTOK = "https://www.tiktok.com/@zenvyroficial?_r=1&_t=ZS-9BhTAqmhqg
   a.addEventListener('click',function(){
     try{ (new Image()).src='https://abacus.jasoncameron.dev/hit/zenvyr/apoyo-proyecto'; }catch(e){}
   });
+})();
+</script>
+<script>
+/* META DE SEGUIDORES EN TIKTOK (1,000):
+   Muestra cuántos seguidores tiene @zenvyroficial y cuánto falta
+   para la meta. El número vive en Abacus (clave "seguidores-tiktok",
+   namespace "zenvyr") y la página lo lee al abrir con /get (sin
+   sumar). Cada seguidor nuevo se suma con /hit desde el chequeo
+   de Muse (TikTok no avisa solo cuando llega alguien nuevo).
+   Abacus solo suma, no resta: si alguien deja de seguir, el
+   número no baja. */
+(function(){
+  var META=1000,
+      num=document.getElementById('seguidores-num'),
+      bar=document.getElementById('seguidores-bar'),
+      faltan=document.getElementById('seguidores-faltan');
+  if(!num)return;
+  function pintar(n){
+    num.textContent=n.toLocaleString('es-MX');
+    if(bar)bar.style.width=Math.min(100,(n/META)*100)+'%';
+    if(faltan){
+      if(n>=META)faltan.textContent='¡Meta alcanzada! Zenvyr sale el 24 de diciembre.';
+      else faltan.textContent='Faltan '+(META-n).toLocaleString('es-MX')+' seguidores para que Zenvyr salga el 24 de diciembre.';
+    }
+  }
+  fetch('https://abacus.jasoncameron.dev/get/zenvyr/seguidores-tiktok')
+    .then(function(r){return r.json()})
+    .then(function(d){ if(typeof d.value==='number')pintar(d.value); })
+    .catch(function(){});
 })();
 </script>
 <script data-goatcounter="https://nimbuspro.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script></body>
