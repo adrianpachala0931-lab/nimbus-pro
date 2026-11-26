@@ -229,7 +229,7 @@ footer img{width:44px;height:auto;margin-bottom:8px}
   <h1>ZENVYR</h1>
   <p class="tag">La app ecualizadora y de bajos. Sube tus propias canciones y siente cada grave.</p>
   <div class="support-row">
-  <a class="support" href="https://www.tiktok.com/@zenvyroficial?_r=1&amp;_t=ZS-9BhTAqmhqgG" target="_blank" rel="noopener noreferrer">
+  <a class="support" id="btn-apoyar-proyecto" href="https://www.tiktok.com/@zenvyroficial?_r=1&amp;_t=ZS-9BhTAqmhqgG" target="_blank" rel="noopener noreferrer">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0112 7.9a4.3 4.3 0 017.5 2.4c0 5.6-7.5 10.2-7.5 10.2z"/></svg>
     Apoyar el proyecto
   </a>
@@ -466,6 +466,21 @@ var PERFIL_TIKTOK = "https://www.tiktok.com/@zenvyroficial?_r=1&_t=ZS-9BhTAqmhqg
     .then(function(r){return r.json()})
     .then(function(d){ if(typeof d.value==='number')el.textContent=d.value.toLocaleString('es-MX'); else el.textContent='—'; })
     .catch(function(){ el.textContent='—'; });
+})();
+</script>
+<script>
+/* CONTADOR DE CLICS EN "APOYAR EL PROYECTO":
+   Cada vez que alguien le pica al botón que abre el perfil de TikTok,
+   suma 1 (sin deduplicar: cada toque cuenta). Es el tercer contador
+   que lee la app de consulta de Adrián. Usa Abacus, clave
+   "apoyo-proyecto" (namespace "zenvyr"). Se manda como píxel para
+   no retrasar la apertura del enlace. */
+(function(){
+  var a=document.getElementById('btn-apoyar-proyecto');
+  if(!a)return;
+  a.addEventListener('click',function(){
+    try{ (new Image()).src='https://abacus.jasoncameron.dev/hit/zenvyr/apoyo-proyecto'; }catch(e){}
+  });
 })();
 </script>
 <script data-goatcounter="https://nimbuspro.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script></body>
